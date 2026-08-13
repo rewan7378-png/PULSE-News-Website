@@ -1,167 +1,125 @@
 import "../NewsPage.css";
-import { useEffect, useState } from "react";
-import { getTopHeadlines } from "../api";
+import { useState } from "react";
+import { searchNews } from "../api";
 
 function AIPage() {
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState("");
-  const [articles, setArticles] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    getTopHeadlines()
-      .then((data) => {
-        setArticles(data);
-      })
-      .catch((error) => {
-        console.error("AI NEWS ERROR:", error);
-      });
-  }, []);
-
-  const handleAskAI = (e) => {
+  const handleAskAI = async (e) => {
     e.preventDefault();
 
     if (!question.trim()) {
       return;
     }
 
-    const query = question.toLowerCase();
+    setLoading(true);
+    setAnswer("");
 
-    const topicKeywords = {
-      technology: [
-        "technology",
-        "tech",
-        "ai",
-        "artificial intelligence",
-        "software",
-        "computer",
-        "digital",
-        "innovation",
-        "internet",
-      ],
+    try {
+      const query = question.trim();
 
-      sports: [
-        "sport",
-        "sports",
-        "football",
-        "soccer",
-        "basketball",
-        "tennis",
-        "match",
-        "player",
-        "team",
-      ],
+      // Remove common question words and keep important keywords
+      const stopWords = [
+        "what",
+        "whats",
+        "what's",
+        "is",
+        "are",
+        "the",
+        "a",
+        "an",
+        "in",
+        "on",
+        "about",
+        "happening",
+        "happen",
+        "latest",
+        "news",
+        "tell",
+        "me",
+        "today",
+        "currently",
+        "can",
+        "you",
+        "give",
+        "show",
+        "information",
+        "about",
+      ];
 
-      politics: [
-        "politics",
-        "political",
-        "government",
-        "president",
-        "election",
-        "minister",
-        "parliament",
-      ],
+      const keywords = query
+        .toLowerCase()
+        .replace(/[?.,!]/g, "")
+        .split(/\s+/)
+        .filter(
+          (word) =>
+            word.length > 2 && !stopWords.includes(word)
+        );
 
-      economy: [
-        "economy",
-        "economic",
-        "business",
-        "market",
-        "money",
-        "finance",
-        "company",
-        "companies",
-      ],
+      const searchQuery = keywords.join(" ");
 
-      science: [
-        "science",
-        "scientist",
-        "space",
-        "research",
-        "study",
-        "discovery",
-      ],
+      const searchResults = await searchNews(searchQuery);
 
-      climate: [
-        "climate",
-        "environment",
-        "weather",
-        "global warming",
-        "pollution",
-        "earth",
-      ],
+      if (searchResults.length === 0) {
+        setAnswer(
+          `I couldn't find any news related to "${searchQuery}".
 
-      food: [
-        "food",
-        "restaurant",
-        "cooking",
-        "recipe",
-        "meal",
-        "chef",
-      ],
-    };
+Try asking about another topic such as Technology, Sports, Politics, Economy, Science, Climate, or Food.`
+        );
 
-    let detectedTopic = null;
-
-    for (const topic in topicKeywords) {
-      if (
-        topicKeywords[topic].some((keyword) =>
-          query.includes(keyword)
-        )
-      ) {
-        detectedTopic = topic;
-        break;
+        return;
       }
-    }
 
-    const matchedArticles = articles.filter((article) => {
-      const articleText = `
-        ${article.title || ""}
-        ${article.description || ""}
-        ${article.category?.join(" ") || ""}
-      `.toLowerCase();
+      // Make sure the returned articles actually contain the keywords
+      const relevantArticles = searchResults.filter((article) => {
+        const articleText = `
+          ${article.title || ""}
+          ${article.description || ""}
+          ${article.content || ""}
+          ${article.category?.join(" ") || ""}
+        `.toLowerCase();
 
-      if (detectedTopic) {
-        return topicKeywords[detectedTopic].some((keyword) =>
+        return keywords.some((keyword) =>
           articleText.includes(keyword)
         );
+      });
+
+      if (relevantArticles.length === 0) {
+        setAnswer(
+          `I couldn't find reliable news related to "${searchQuery}" in the current PULSE feed.
+
+Try searching for another topic.`
+        );
+
+        return;
       }
 
-      const words = query
-        .split(" ")
-        .filter((word) => word.length > 3);
+      const results = relevantArticles
+        .slice(0, 5)
+        .map(
+          (article, index) =>
+            `${index + 1}. ${article.title}\n${
+              article.description || "No description available."
+            }`
+        )
+        .join("\n\n");
 
-      return words.some((word) => articleText.includes(word));
-    });
-
-    if (matchedArticles.length === 0) {
       setAnswer(
-        `I couldn't find related ${
-          detectedTopic || "news"
-        } in the current PULSE feed.
-
-Try asking about Technology, Sports, Politics, Economy, Science, Climate, or Food.`
-      );
-
-      return;
-    }
-
-    const results = matchedArticles
-      .slice(0, 3)
-      .map(
-        (article, index) =>
-          `${index + 1}. ${article.title}\n${
-            article.description || "No description available."
-          }`
-      )
-      .join("\n\n");
-
-    setAnswer(
-      `Here are some ${
-        detectedTopic ? detectedTopic : "related"
-      } stories from the current PULSE news feed:
+        `Here are some news stories related to "${searchQuery}" from the current PULSE news feed:
 
 ${results}`
-    );
+      );
+    } catch (error) {
+      console.error("AI SEARCH ERROR:", error);
+
+      setAnswer(
+        "Sorry, I couldn't search the news right now. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -212,8 +170,8 @@ ${results}`
         </span>
 
         <h1
-            className="ai-page-title"
           style={{
+            fontSize: "48px",
             margin: "15px 0",
           }}
         >
@@ -235,7 +193,7 @@ ${results}`
           <textarea
             value={question}
             onChange={(e) => setQuestion(e.target.value)}
-            placeholder="Example: What is happening in technology?"
+            placeholder="Example: What is happening in Gaza?"
             rows="5"
             style={{
               width: "100%",
@@ -253,6 +211,7 @@ ${results}`
 
           <button
             type="submit"
+            disabled={loading}
             style={{
               marginTop: "20px",
               padding: "13px 28px",
@@ -261,11 +220,11 @@ ${results}`
               background: "#36a9ff",
               color: "#050b14",
               fontWeight: "600",
-              cursor: "pointer",
+              cursor: loading ? "not-allowed" : "pointer",
               fontSize: "14px",
             }}
           >
-            🤖 Ask AI
+            {loading ? "🤖 Searching..." : "🤖 Ask AI"}
           </button>
 
         </form>
