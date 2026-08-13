@@ -1,5 +1,6 @@
 import "../NewsPage.css";
 import { useEffect, useState } from "react";
+import {link} from "React-router-dom";
 
 function SavedNews() {
   const [savedNews, setSavedNews] = useState([]);
@@ -25,20 +26,22 @@ function SavedNews() {
   return (
     <div className="news-page">
 
-      <nav className="news-navbar">
+     <nav className="news-navbar">
 
-        <a href="/" className="news-logo">
-          PULSE
-        </a>
+  <Link to="/" className="news-logo">
+    PULSE
+  </Link>
 
-        <div className="news-nav-links">
-          <a href="/news">Home</a>
-          <a href="/news">Categories</a>
-          <a href="/news">Trending</a>
-          <a href="/saved">Saved</a>
-        </div>
+  <div className="news-nav-links">
 
-      </nav>
+    <Link to="/news">Home</Link>
+    <Link to="/news">Categories</Link>
+    <Link to="/news">Trending</Link>
+    <Link to="/saved">Saved</Link>
+
+  </div>
+
+</nav>
 
       <section className="latest-news">
 
