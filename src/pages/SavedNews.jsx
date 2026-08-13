@@ -1,6 +1,6 @@
 import "../NewsPage.css";
 import { useEffect, useState } from "react";
-import {link} from "React-router-dom";
+import {link} from "react-router-dom";
 
 function SavedNews() {
   const [savedNews, setSavedNews] = useState([]);
