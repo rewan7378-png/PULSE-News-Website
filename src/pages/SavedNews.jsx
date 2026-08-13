@@ -1,8 +1,10 @@
 import "../NewsPage.css";
 import { useEffect, useState } from "react";
 import {Link} from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 function SavedNews() {
+  const navigate = useNavigate();
   const [savedNews, setSavedNews] = useState([]);
 
   useEffect(() => {
