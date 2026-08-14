@@ -742,3 +742,15 @@
     width: 100%;
   }
 }
+.ai-page-title {
+  font-size: 48px;
+  margin: 15px 0;
+  line-height: 1.2;
+}
+
+@media (max-width: 600px) {
+  .ai-page-title {
+    font-size: 38px;
+    line-height: 1.15;
+  }
+}

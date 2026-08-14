@@ -169,14 +169,9 @@ ${results}`
           PULSE AI
         </span>
 
-        <h1
-          style={{
-            fontSize: "48px",
-            margin: "15px 0",
-          }}
-        >
-          Ask AI About the News
-        </h1>
+       <h1 className="ai-page-title">
+  Ask AI About the News
+</h1>
 
         <p
           style={{
